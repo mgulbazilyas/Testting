@@ -89,4 +89,7 @@ def driverGetter():
 if __name__=="__main__":
     print("testing")
     self = Browser()
-    self.get_result_of_keyword("roof")
+    keywords = input("enter the input txt file")
+    lines = open(keywords,'r').readlines()
+    for line in lines:
+        self.get_result_of_keyword(line)
