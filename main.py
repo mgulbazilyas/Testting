@@ -45,6 +45,7 @@ class Browser:
             if j:
                 print(j)
                 self.data.append(j)
+                pd.DataFrame(j).to_csv('test.csv',index=False)
 
     def get_info_of_one(self,driver:Chrome):
         title = driver.find_element_by_id('title-wrapper').text
@@ -82,3 +83,8 @@ class Browser:
 def driverGetter():
     driver = Chrome(chrome_options=chrome_options)
     return driver
+
+if __name__=="__main__":
+    print("testing")
+    self = Browser()
+    self.get_result_of_keyword("roof")
