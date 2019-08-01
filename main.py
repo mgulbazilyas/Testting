@@ -82,6 +82,7 @@ class Browser:
 
 def driverGetter():
     driver = Chrome(chrome_options=chrome_options)
+    driver.set_window_size(1300,700)
     return driver
 
 if __name__=="__main__":
