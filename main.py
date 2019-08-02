@@ -1,5 +1,6 @@
 keywords = input("enter the input txt file")
 import re
+import pandas as pd
 import time
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
@@ -9,6 +10,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--disable-setuid-sandbox")
 from selenium.webdriver import Chrome
+
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -31,9 +33,9 @@ class Browser:
         self.driver.get(query)
         time.sleep(2)
         filterBtn = self.driver.find_element_by_xpath('//*[contains(text(),"Filter")]')
-        self.get_results()
+        self.get_results(keyword)
 
-    def get_results(self,current_url=None):
+    def get_results(self,keyword,current_url=None):
         while 1:
             try:
                 self.driver.find_element_by_xpath('//*[contains(text(),"No more results")]')
@@ -44,14 +46,18 @@ class Browser:
             save(self.driver)
             results = self.driver.find_elements_by_tag_name('ytd-video-renderer')
             for i in results:
-                j = self.get_info_of_one(i)
+                j = self.get_info_of_one(i,keyword)
                 if j:
                     print(j)
                     pd.DataFrame(self.data).to_csv('data.csv',index=False)
                     save(self.driver)
                     self.data.append(j)
 
-    def get_info_of_one(self,driver:Chrome):
+    def get_info_of_one(self,driver:Chrome,keyword):
+        length = driver.find_element_by_xpath('.//span[contains(@aria-label,"minutes")]').get_attribute('aria-label').split(' ')[0]
+        if int(length) > 10:
+            return False
+        
         title = driver.find_element_by_id('title-wrapper').text
         el = driver.find_element_by_xpath('.//a[@class="yt-simple-endpoint style-scope yt-formatted-string"]')
         link = el.get_attribute('href')
@@ -71,8 +77,9 @@ class Browser:
             
         except:
             email = ''
+        subscriber = driver.find_element_by_id('subscriber-count').text.split(' ')[0]
         driver.close()
-        return ((title,user_name,link,email))
+        return ((keyword,title,user_name,link,email,subscriber))
 
     def check_email(self,link,driver):
 
