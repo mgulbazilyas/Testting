@@ -1,3 +1,4 @@
+keywords = input("enter the input txt file")
 import re
 import time
 import pandas as pd
@@ -46,7 +47,7 @@ class Browser:
             if j:
                 print(j)
                 self.data.append(j)
-                pd.DataFrame(j).to_csv('test.csv',index=False)
+                pd.DataFrame(self.data).to_csv('test.csv',index=False)
 
     def get_info_of_one(self,driver:Chrome):
         title = driver.find_element_by_id('title-wrapper').text
@@ -82,14 +83,13 @@ class Browser:
         del self.driver
 
 def driverGetter():
-    driver = Chrome(chrome_options=chrome_options)
+    driver = Chrome()
     driver.set_window_size(1300,700)
     return driver
 
 if __name__=="__main__":
     print("testing")
     self = Browser()
-    keywords = input("enter the input txt file")
     lines = open(keywords,'r').readlines()
     for line in lines:
         self.get_result_of_keyword(line)
