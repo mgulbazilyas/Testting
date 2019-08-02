@@ -1,7 +1,6 @@
 keywords = input("enter the input txt file")
 import re
 import time
-import pandas as pd
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
@@ -22,6 +21,7 @@ from datetime import datetime
 class Browser:
 
     def __init__(self):
+        self.done = []
         self.data = []
         self.driver = driverGetter()
         self.driver.get("https://youtube.com")
@@ -41,18 +41,23 @@ class Browser:
             except:
                 self.driver.execute_script('window.scrollBy(0,3000);')
                 time.sleep(2)
-        results = self.driver.find_elements_by_tag_name('ytd-video-renderer')
-        for i in results:
-            j = self.get_info_of_one(i)
-            if j:
-                print(j)
-                self.data.append(j)
-                pd.DataFrame(self.data).to_csv('test.csv',index=False)
+            save(self.driver)
+            results = self.driver.find_elements_by_tag_name('ytd-video-renderer')
+            for i in results:
+                j = self.get_info_of_one(i)
+                if j:
+                    print(j)
+                    pd.DataFrame(self.data).to_csv('data.csv',index=False)
+                    save(self.driver)
+                    self.data.append(j)
 
     def get_info_of_one(self,driver:Chrome):
         title = driver.find_element_by_id('title-wrapper').text
         el = driver.find_element_by_xpath('.//a[@class="yt-simple-endpoint style-scope yt-formatted-string"]')
         link = el.get_attribute('href')
+        if link in self.done:
+            return False
+        self.done.append(link)
         user_name = el.text
         views = driver.find_element_by_xpath('.//span[@class="style-scope ytd-video-meta-block"]').text.split(' ')[0]
         try:
@@ -63,11 +68,11 @@ class Browser:
         try:
             print('done')
             email = self.check_email(link,driver)
-            print('done')
+            
         except:
             email = ''
         driver.close()
-        return ((datetime.now(),title,link,user_name,views,email))
+        return ((title,user_name,link,email))
 
     def check_email(self,link,driver):
 
