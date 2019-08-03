@@ -1,7 +1,8 @@
-keywords = input("enter the input txt file")
+# keywords = input("enter the input txt file")
 import re
 import pandas as pd
 import time
+import pickle
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
@@ -21,10 +22,16 @@ prefix = {'K':'e3','M':'e6','B':'e9'}
 from datetime import datetime
 
 class Browser:
-
+    index=0
     def __init__(self):
-        self.done = []
-        self.data = []
+        try:
+            with open('done.pickle','rb') as token:
+                self.done = pickle.load(token)
+        except:
+            self.done = []
+        try:
+            self.data = pd.read_csv('data.csv').to_values.to_list()
+        except: self.data = []
         self.driver = driverGetter()
         self.driver.get("https://youtube.com")
 
@@ -48,22 +55,26 @@ class Browser:
             for i in results:
                 j = self.get_info_of_one(i,keyword)
                 if j:
-                    print(j)
+                    
                     pd.DataFrame(self.data).to_csv('data.csv',index=False)
                     save(self.driver)
                     self.data.append(j)
 
     def get_info_of_one(self,driver:Chrome,keyword):
-        length = driver.find_element_by_xpath('.//span[contains(@aria-label,"minutes")]').get_attribute('aria-label').split(' ')[0]
-        if int(length) > 10:
-            return False
-        
+        try:
+            length = driver.find_element_by_xpath('.//span[contains(@aria-label,"minutes")]').get_attribute('aria-label').split(' ')[0]
+            if int(length) > 10:
+                return False
+        except: length=0
         title = driver.find_element_by_id('title-wrapper').text
         el = driver.find_element_by_xpath('.//a[@class="yt-simple-endpoint style-scope yt-formatted-string"]')
         link = el.get_attribute('href')
         if link in self.done:
             return False
+        print(len(self.done))
         self.done.append(link)
+        with open('done.pickle','wb') as token:
+            pickle.dump(self.done,token)
         user_name = el.text
         views = driver.find_element_by_xpath('.//span[@class="style-scope ytd-video-meta-block"]').text.split(' ')[0]
         try:
@@ -102,6 +113,8 @@ def driverGetter():
 if __name__=="__main__":
     print("testing")
     self = Browser()
-    lines = open(keywords,'r').readlines()
-    for line in lines:
-        self.get_result_of_keyword(line)
+    lines = ['fitness','vegan']
+    while 1:
+        #lines = open(keywords,'r').readlines()
+        for line in lines:
+            self.get_result_of_keyword(line)
