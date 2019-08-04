@@ -1,17 +1,22 @@
 # keywords = input("enter the input txt file")
 import re
 import pandas as pd
+self = "none"
 import time
 import pickle
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--disable-setuid-sandbox")
 from selenium.webdriver import Chrome
-
+logs = open('program.logs','a')
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -22,6 +27,7 @@ prefix = {'K':'e3','M':'e6','B':'e9'}
 from datetime import datetime
 
 class Browser:
+    
     index=0
     def __init__(self):
         try:
@@ -83,7 +89,6 @@ class Browser:
             return False
         driver = driverGetter()
         try:
-            print('done')
             email = self.check_email(link,driver)
             
         except:
@@ -92,29 +97,56 @@ class Browser:
         driver.close()
         return ((keyword,title,user_name,link,email,subscriber))
 
-    def check_email(self,link,driver):
+    def check_email(self,link,driver):  
+            global logs        
+            print(link)
+            driver.get(link+'/about')
+            try:
+                description = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, "description-container"))
+                ).text
 
-        driver.get(link+'/about')
-        description = self.driver.find_element_by_id("description-container").text
-        match = re.search(r'[\w\.-]+@[\w\.-]+', description).group()
+                match = re.search(r'[\w\.-]+@[\w\.-]+', description).group()
 
-        return match
-
+                return match
+            except Exception as e:
+                logs.write(e)
+                raise e
 
     def __del__(self):
 
         del self.driver
-
+def saveData(self):
+    df = pd.DataFrame(self.data)
+    df = df[~((df[4]=='') | (df[5]==''))]
+    df[5] = df[5].fillna('0')
+    df[5][df[5]==''] = 0
+    df[5] = df[5].str.replace(',','')
+    df[5] = df[5].astype('int')
+    df = df[df[5]>3000]
+    df.to_csv('usableData.csv')
 def driverGetter():
     driver = Chrome(options=chrome_options)
     driver.set_window_size(1300,700)
     return driver
 
 if __name__=="__main__":
+    global logs
+    global self
     print("testing")
     self = Browser()
     lines = ['fitness','vegan']
     while 1:
+        logs= open('program.logs','a')
+        logs.write('\n\nRunning \n\n')
+        logs.write('-'*30)
         #lines = open(keywords,'r').readlines()
         for line in lines:
             self.get_result_of_keyword(line)
+        saveData(self)
+        
+        logs.write('\n\n')
+        logs.write('-'*30)
+        logs.write('running again'
+        )
+        logs.close
